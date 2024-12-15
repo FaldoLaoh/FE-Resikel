@@ -1,269 +1,301 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Button } from "@/components/ui/button";
 
 const PenggunaPage = () => {
-  const [users, setusers] = useState([]);
-  const [newData, setNewData] = useState({
-    nama: "",
-    email: "",
-    role: "",
-    point: "",
-    password: "",
-  });
-  const [editData, setEditData] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [updatedUser, setUpdatedUser] = useState({ email: "", name: "" });
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false); // State to control the "Add New User" modal
+  const navigate = useNavigate();
 
-  // Fetch data on mount
+  const [newUser, setNewUser] = useState({
+    email: "",
+    password: "",
+    name: "",
+  });
+
+  // Fetch users when the component is mounted
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/users")
-      .then((response) => setusers(response.data))
-      .catch((error) => console.error("Error fetching users:", error));
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get("http://localhost:5001/api/users");
+        setUsers(response.data);
+      } catch (err) {
+        setError(
+          "No response from the server. Please check your network connection."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
   }, []);
 
-  // Toggle modal
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
+  // Handle delete user
+  const handleDelete = async (userId) => {
+    try {
+      const response = await axios.delete(
+        `http://localhost:5001/api/users/${userId}`
+      );
+      console.log(response.data); // Log the response
+      setUsers(users.filter((user) => user.id !== userId)); // Use correct user id for filtering
+    } catch (err) {
+      console.error("Error deleting user:", err.response?.data || err.message);
+      setError("Failed to delete the user.");
+    }
   };
 
-  // Handle input changes for new data
+  // Handle edit user (open the edit modal)
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    setUpdatedUser({ email: user.email, name: user.name });
+    setIsEditModalOpen(true);
+  };
+
+  // Handle form field change for user details
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewData((prevData) => ({
-      ...prevData,
+    setUpdatedUser((prev) => ({
+      ...prev,
       [name]: value,
     }));
   };
 
-  // Handle input changes for editing
-  const handleEditChange = (e) => {
+  // Handle update user details
+  const handleUpdateUser = async () => {
+    try {
+      await axios.put(
+        `http://localhost:5001/api/users/${selectedUser.id}`,
+        updatedUser
+      );
+      setUsers(
+        users.map((user) =>
+          user.id === selectedUser.id ? { ...user, ...updatedUser } : user
+        )
+      );
+      setIsEditModalOpen(false); // Close the modal after successful update
+    } catch (err) {
+      setError("Failed to update the user.");
+    }
+  };
+
+  // Handle new user input change
+  const handleNewUserInputChange = (e) => {
     const { name, value } = e.target;
-    setEditData((prevData) => ({
-      ...prevData,
+    setNewUser((prev) => ({
+      ...prev,
       [name]: value,
     }));
   };
 
-  // Create new User
-  const handleCreate = () => {
-    axios
-      .post("http://localhost:5000/users", newData)
-      .then((response) => {
-        setusers([...users, response.data]);
-        toggleModal();
-      })
-      .catch((error) => console.error("Error creating Users:", error));
-  };
-
-  // Update Users
-  const handleUpdate = () => {
-    axios
-      .put(`http://localhost:5000/users/${editData.id}`, editData)
-      .then((response) => {
-        const updatedData = users.map((users) =>
-          users.id === editData.id ? response.data : users
-        );
-        setusers(updatedData);
-        toggleModal();
-      })
-      .catch((error) => console.error("Error updating Users:", error));
-  };
-
-  // Delete Users
-  const handleDelete = (id) => {
-    axios
-      .delete(`http://localhost:5000/users/${id}`)
-      .then(() => {
-        const filteredData = users.filter((users) => users.id !== id);
-        setusers(filteredData);
-      })
-      .catch((error) => console.error("Error deleting users:", error));
+  // Handle add new user
+  const handleAddNewUser = async () => {
+    try {
+      await axios.post("http://localhost:5001/api/users", newUser);
+      setUsers([...users, newUser]);
+      setIsAddModalOpen(false); // Close the modal after successful addition
+    } catch (err) {
+      setError("Failed to add new user.");
+    }
   };
 
   return (
-    <>
-      <div className="w-full mt-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 col-span-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-              Manajemen Pengguna
-              <br />
-            </h2>
-            <div className="flex items-center border border-gray-300 rounded-lg">
-              <Button
-                onClick={toggleModal}
-                className="bg-emerald-600 text-white hover:bg-emerald-700 px-2 py-1 text-sm rounded-md shadow-md"
-              >
-                Tambah
-              </Button>
-            </div>
-          </div>
-          <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-            <table className="min-w-full table-auto">
-              <thead className="bg-blue-100">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-800">
+      <div className="flex-1 overflow-y-auto mt-16 ml-64">
+        <header className="bg-white dark:bg-gray-900 shadow p-4 flex justify-between">
+          <h1 className="text-2xl font-bold">Manage Users</h1>
+          <button
+            onClick={() => setIsAddModalOpen(true)} // Open the "Add New User" modal
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          >
+            Add New User
+          </button>
+        </header>
+
+        <div className="mt-6 p-6">
+          {isLoading ? (
+            <p>Loading users...</p>
+          ) : error ? (
+            <p>{error}</p>
+          ) : (
+            <table className="w-full table-auto bg-white dark:bg-gray-700 rounded-lg">
+              <thead>
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                    No
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                    Nama
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                    Email
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                    Role
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                    Point
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                    Aksi
-                  </th>
+                  {["ID", "Email", "Name", "Actions"].map((header, index) => (
+                    <th key={index} className="px-4 py-2">
+                      {header}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {users.map((users, index) => (
-                  <tr key={users.id}>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {index + 1}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {users.nama}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {users.email}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {users.role}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {users.point}
-                    </td>
-                    <td className="px-4 py-2 text-sm">
-                      <Button
-                        onClick={() => {
-                          setEditData(users);
-                          toggleModal();
-                        }}
-                        className="bg-emerald-600 text-white hover:bg-emerald-700 p-2 rounded-md shadow-md"
+                {users.map((user) => (
+                  <tr key={user.id}>
+                    <td className="px-4 py-2">{user.id}</td>
+                    <td className="px-4 py-2">{user.email}</td>
+                    <td className="px-4 py-2">{user.name}</td>
+                    <td className="px-4 py-2">
+                      <button
+                        onClick={() => handleEdit(user)}
+                        className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
                       >
                         Edit
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(users.id)}
-                        className="bg-red-600 text-white hover:bg-red-700 p-2 rounded-md shadow-md ml-2"
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user.id)}
+                        className="ml-2 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
                       >
-                        Hapus
-                      </Button>
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Overlay Card */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              toggleModal();
-            }
-          }}
-        >
-          <div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">
-            <h2 className="text-lg font-bold mb-4">
-              {editData ? "Edit Pengguna" : "Tambah Pengguna"}
-            </h2>
-            <form>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Nama</label>
-                <input
-                  type="text"
-                  name="nama"
-                  value={editData ? editData.nama : newData.nama}
-                  onChange={editData ? handleEditChange : handleInputChange}
-                  className="w-full px-4 py-2 border rounded-md"
-                  placeholder="Masukkan Nama Lengkap"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={editData ? editData.email : newData.email}
-                  onChange={editData ? handleEditChange : handleInputChange}
-                  className="w-full px-4 py-2 border rounded-md"
-                  placeholder="Masukkan Email"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Role</label>
-                <select
-                  name="role"
-                  value={editData ? editData.role : newData.role}
-                  onChange={editData ? handleEditChange : handleInputChange}
-                  className="w-full px-4 py-2 border rounded-md"
-                >
-                  <option value="" disabled>
-                    Pilih Role
-                  </option>
-                  <option value="Admin">Admin</option>
-                  <option value="User">User</option>
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Point</label>
-                <input
-                  type="number"
-                  name="point"
-                  value={editData ? editData.point : newData.point}
-                  onChange={editData ? handleEditChange : handleInputChange}
-                  className="w-full px-4 py-2 border rounded-md"
-                  placeholder="Masukkan Point"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={editData ? editData.password : newData.password}
-                  onChange={editData ? handleEditChange : handleInputChange}
-                  className="w-full px-4 py-2 border rounded-md"
-                  placeholder="Masukkan Password"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button
-                  onClick={toggleModal}
-                  className="bg-gray-400 text-white hover:bg-gray-500 px-4 py-2 rounded-md"
-                >
-                  Batal
-                </Button>
-                <Button
-                  onClick={editData ? handleUpdate : handleCreate}
-                  className="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-md"
-                >
-                  {editData ? "Update" : "Simpan"}
-                </Button>
-              </div>
-            </form>
+      {/* Add New User Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-2xl font-bold mb-4">Add New User</h2>
+            <div className="mb-4">
+              <label
+                htmlFor="email"
+                className="block text-gray-700 dark:text-gray-200"
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={newUser.email}
+                onChange={handleNewUserInputChange}
+                className="mt-2 p-2 w-full border rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="password"
+                className="block text-gray-700 dark:text-gray-200"
+              >
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={newUser.password}
+                onChange={handleNewUserInputChange}
+                className="mt-2 p-2 w-full border rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="name"
+                className="block text-gray-700 dark:text-gray-200"
+              >
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={newUser.name}
+                onChange={handleNewUserInputChange}
+                className="mt-2 p-2 w-full border rounded-lg"
+              />
+            </div>
+            <div className="flex justify-between">
+              <button
+                onClick={handleAddNewUser}
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              >
+                Add User
+              </button>
+              <button
+                onClick={() => setIsAddModalOpen(false)} // Close the modal
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && selectedUser && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-2xl font-bold mb-4">Edit User</h2>
+            <div className="mb-4">
+              <label
+                htmlFor="email"
+                className="block text-gray-700 dark:text-gray-200"
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={updatedUser.email}
+                onChange={handleInputChange}
+                className="mt-2 p-2 w-full border rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="name"
+                className="block text-gray-700 dark:text-gray-200"
+              >
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={updatedUser.name}
+                onChange={handleInputChange}
+                className="mt-2 p-2 w-full border rounded-lg"
+              />
+            </div>
+            <div className="flex justify-between">
+              {/* Delete button */}
+              {/* <button
+                onClick={() => handleDelete(selectedUser.id)}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+              >
+                Delete
+              </button> */}
+              <button
+                onClick={handleUpdateUser}
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              >
+                Update
+              </button>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

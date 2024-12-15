@@ -11,12 +11,12 @@ import LoginPage from "./pages/Admin/LoginPage";
 import Dashboard from "./pages/Admin/DashboardPage";
 import Kategori from "./pages/Admin/KategoriSampahPage";
 import Management from "./pages/Admin/ManagementPage";
-import PenggunaPage from "./pages/Admin/PenggunaPage";
 import ProdukSampah from "./pages/Admin/ProdukSampahPage";
 import Transaksi from "./pages/Admin/TransaksiPage";
 import UOMPage from "./pages/Admin/UOMPage";
 import NavbarAdmin from "./components/navbar/Navbar_Admin";
 import Sidebar from "@/components/Sidebar/Sidebar";
+import PenggunaPage from "./pages/Admin/PenggunaPage";
 
 function App() {
   return (
@@ -41,13 +41,14 @@ function App() {
 
           {/* Admin Routes with Sidebar */}
           <Route
-            path="/Web/*"
+            path="/web/*"
             element={
               <div style={{ display: "flex" }}>
                 <Sidebar /> {/* Sidebar is rendered here */}
-                <NavbarAdmin />
                 <div style={{ flex: 1 }}>
+                  <NavbarAdmin />
                   <Routes>
+                    {/* Admin Section Routes */}
                     <Route path="" element={<Dashboard />} />
                     <Route path="kategori-sampah" element={<Kategori />} />
                     <Route path="management" element={<Management />} />
