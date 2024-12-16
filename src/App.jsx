@@ -1,7 +1,9 @@
-import React from "react";
-import Navbar from "./components/navbar/Navbar";
+import React, { useEffect, useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Sidebar from "@/components/Sidebar/Sidebar";
+import Navbar from "@/components/Navbar/Navbar"; // Assuming Navbar is the component name
 import HomePage from "./pages/User/HomePage";
-import { Routes, Route } from "react-router-dom";
 import AboutPage from "./pages/User/AboutPage";
 import Activities from "./pages/User/Activitiespage";
 import Education from "./pages/User/EducationPage";
@@ -14,11 +16,56 @@ import Management from "./pages/Admin/ManagementPage";
 import ProdukSampah from "./pages/Admin/ProdukSampahPage";
 import Transaksi from "./pages/Admin/TransaksiPage";
 import UOMPage from "./pages/Admin/UOMPage";
-import NavbarAdmin from "./components/navbar/Navbar_Admin";
-import Sidebar from "@/components/Sidebar/Sidebar";
+import NavbarAdmin from "@/components/Navbar/Navbar_Admin";
 import PenggunaPage from "./pages/Admin/PenggunaPage";
 
-function App() {
+const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5001/check-session",
+          {
+            withCredentials: true,
+          }
+        );
+        if (response.data.Status === "Success") {
+          setIsAuthenticated(true);
+          setUser(response.data.User);
+        } else {
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        navigate("/login");
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    const confirmLogout = window.confirm("Are you sure you want to log out?");
+    if (confirmLogout) {
+      try {
+        await axios.post(
+          "http://localhost:5001/logout",
+          {},
+          { withCredentials: true }
+        );
+        setIsAuthenticated(false);
+        setUser(null);
+        navigate("/login");
+      } catch (error) {
+        console.error("Error logging out:", error);
+      }
+    }
+  };
+
   return (
     <>
       {/* User Section */}
@@ -37,34 +84,38 @@ function App() {
       <div className="admin">
         <Routes>
           {/* No Sidebar for Login */}
-          <Route path="/Login" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage />} />
 
           {/* Admin Routes with Sidebar */}
           <Route
             path="/web/*"
             element={
-              <div style={{ display: "flex" }}>
-                <Sidebar /> {/* Sidebar is rendered here */}
-                <div style={{ flex: 1 }}>
-                  <NavbarAdmin />
-                  <Routes>
-                    {/* Admin Section Routes */}
-                    <Route path="" element={<Dashboard />} />
-                    <Route path="kategori-sampah" element={<Kategori />} />
-                    <Route path="management" element={<Management />} />
-                    <Route path="pengguna" element={<PenggunaPage />} />
-                    <Route path="produk-sampah" element={<ProdukSampah />} />
-                    <Route path="transaksi" element={<Transaksi />} />
-                    <Route path="uom" element={<UOMPage />} />
-                  </Routes>
+              isAuthenticated ? (
+                <div style={{ display: "flex" }}>
+                  <Sidebar /> {/* Sidebar is rendered here */}
+                  <div style={{ flex: 1 }}>
+                    <NavbarAdmin user={user} handleLogout={handleLogout} />
+                    <Routes>
+                      {/* Admin Section Routes */}
+                      <Route path="" element={<Dashboard />} />
+                      <Route path="kategori-sampah" element={<Kategori />} />
+                      <Route path="management" element={<Management />} />
+                      <Route path="pengguna" element={<PenggunaPage />} />
+                      <Route path="produk-sampah" element={<ProdukSampah />} />
+                      <Route path="transaksi" element={<Transaksi />} />
+                      <Route path="uom" element={<UOMPage />} />
+                    </Routes>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div>Loading...</div> // Optionally show loading state until auth is determined
+              )
             }
           />
         </Routes>
       </div>
     </>
   );
-}
+};
 
 export default App;

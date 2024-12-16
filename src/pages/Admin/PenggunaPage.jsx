@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Add navigate for redirection
 
 const PenggunaPage = () => {
   const [users, setUsers] = useState([]);
@@ -9,16 +9,14 @@ const PenggunaPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [updatedUser, setUpdatedUser] = useState({ email: "", name: "" });
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false); // State to control the "Add New User" modal
-  const navigate = useNavigate();
-
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({
     email: "",
     password: "",
     name: "",
   });
+  const navigate = useNavigate(); // Initialize navigate for redirect
 
-  // Fetch users when the component is mounted
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -32,32 +30,24 @@ const PenggunaPage = () => {
         setIsLoading(false);
       }
     };
-
     fetchUsers();
   }, []);
 
-  // Handle delete user
   const handleDelete = async (userId) => {
     try {
-      const response = await axios.delete(
-        `http://localhost:5001/api/users/${userId}`
-      );
-      console.log(response.data); // Log the response
-      setUsers(users.filter((user) => user.id !== userId)); // Use correct user id for filtering
+      await axios.delete(`http://localhost:5001/api/users/${userId}`);
+      setUsers(users.filter((user) => user.id !== userId));
     } catch (err) {
-      console.error("Error deleting user:", err.response?.data || err.message);
       setError("Failed to delete the user.");
     }
   };
 
-  // Handle edit user (open the edit modal)
   const handleEdit = (user) => {
     setSelectedUser(user);
     setUpdatedUser({ email: user.email, name: user.name });
     setIsEditModalOpen(true);
   };
 
-  // Handle form field change for user details
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUpdatedUser((prev) => ({
@@ -66,7 +56,6 @@ const PenggunaPage = () => {
     }));
   };
 
-  // Handle update user details
   const handleUpdateUser = async () => {
     try {
       await axios.put(
@@ -78,13 +67,12 @@ const PenggunaPage = () => {
           user.id === selectedUser.id ? { ...user, ...updatedUser } : user
         )
       );
-      setIsEditModalOpen(false); // Close the modal after successful update
+      setIsEditModalOpen(false);
     } catch (err) {
       setError("Failed to update the user.");
     }
   };
 
-  // Handle new user input change
   const handleNewUserInputChange = (e) => {
     const { name, value } = e.target;
     setNewUser((prev) => ({
@@ -93,14 +81,33 @@ const PenggunaPage = () => {
     }));
   };
 
-  // Handle add new user
   const handleAddNewUser = async () => {
     try {
-      await axios.post("http://localhost:5001/api/users", newUser);
-      setUsers([...users, newUser]);
-      setIsAddModalOpen(false); // Close the modal after successful addition
+      const response = await axios.post(
+        "http://localhost:5001/api/users",
+        newUser
+      );
+      setUsers([...users, response.data]);
+      setNewUser({ email: "", password: "", name: "" }); // Reset the form
+      setIsAddModalOpen(false);
     } catch (err) {
       setError("Failed to add new user.");
+    }
+  };
+
+  const handleLogout = async () => {
+    const confirmLogout = window.confirm("Are you sure you want to log out?");
+    if (confirmLogout) {
+      try {
+        await axios.post(
+          "http://localhost:5001/logout",
+          {},
+          { withCredentials: true }
+        );
+        navigate("/"); // Redirect to login page or home
+      } catch (error) {
+        console.error("Error logging out:", error);
+      }
     }
   };
 
@@ -110,7 +117,7 @@ const PenggunaPage = () => {
         <header className="bg-white dark:bg-gray-900 shadow p-4 flex justify-between">
           <h1 className="text-2xl font-bold">Manage Users</h1>
           <button
-            onClick={() => setIsAddModalOpen(true)} // Open the "Add New User" modal
+            onClick={() => setIsAddModalOpen(true)}
             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
           >
             Add New User
@@ -123,98 +130,92 @@ const PenggunaPage = () => {
           ) : error ? (
             <p>{error}</p>
           ) : (
-            <table className="w-full table-auto bg-white dark:bg-gray-700 rounded-lg">
-              <thead>
-                <tr>
-                  {["ID", "Email", "Name", "Actions"].map((header, index) => (
-                    <th key={index} className="px-4 py-2">
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-4 py-2">{user.id}</td>
-                    <td className="px-4 py-2">{user.email}</td>
-                    <td className="px-4 py-2">{user.name}</td>
-                    <td className="px-4 py-2">
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto bg-white dark:bg-gray-700 rounded-lg shadow-lg">
+                <thead className="bg-gray-200 dark:bg-gray-800">
+                  <tr>
+                    {["ID", "Email", "Name", "Actions"].map((header, index) => (
+                      <th
+                        key={index}
+                        className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="ml-2 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                    </td>
+                        {header}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {users.map((user, index) => (
+                    <tr
+                      key={user.id}
+                      className={`${
+                        index % 2 === 0
+                          ? "bg-white dark:bg-gray-600"
+                          : "bg-gray-100 dark:bg-gray-700"
+                      } hover:bg-gray-50 dark:hover:bg-gray-600`}
+                    >
+                      <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-300">
+                        {user.id}
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-300">
+                        {user.email}
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-300">
+                        {user.name}
+                      </td>
+                      <td className="px-4 py-2">
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="ml-2 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Add New User Modal */}
+      {/* Add Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-2xl font-bold mb-4">Add New User</h2>
-            <div className="mb-4">
-              <label
-                htmlFor="email"
-                className="block text-gray-700 dark:text-gray-200"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={newUser.email}
-                onChange={handleNewUserInputChange}
-                className="mt-2 p-2 w-full border rounded-lg"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="password"
-                className="block text-gray-700 dark:text-gray-200"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={newUser.password}
-                onChange={handleNewUserInputChange}
-                className="mt-2 p-2 w-full border rounded-lg"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="name"
-                className="block text-gray-700 dark:text-gray-200"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={newUser.name}
-                onChange={handleNewUserInputChange}
-                className="mt-2 p-2 w-full border rounded-lg"
-              />
-            </div>
-            <div className="flex justify-between">
+            <input
+              type="email"
+              name="email"
+              value={newUser.email}
+              onChange={handleNewUserInputChange}
+              placeholder="Email"
+              className="mt-2 p-2 w-full border rounded-lg"
+            />
+            <input
+              type="password"
+              name="password"
+              value={newUser.password}
+              onChange={handleNewUserInputChange}
+              placeholder="Password"
+              className="mt-2 p-2 w-full border rounded-lg"
+            />
+            <input
+              type="text"
+              name="name"
+              value={newUser.name}
+              onChange={handleNewUserInputChange}
+              placeholder="Name"
+              className="mt-2 p-2 w-full border rounded-lg"
+            />
+            <div className="flex justify-between mt-4">
               <button
                 onClick={handleAddNewUser}
                 className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
@@ -222,7 +223,7 @@ const PenggunaPage = () => {
                 Add User
               </button>
               <button
-                onClick={() => setIsAddModalOpen(false)} // Close the modal
+                onClick={() => setIsAddModalOpen(false)}
                 className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
               >
                 Cancel
@@ -237,54 +238,29 @@ const PenggunaPage = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-2xl font-bold mb-4">Edit User</h2>
-            <div className="mb-4">
-              <label
-                htmlFor="email"
-                className="block text-gray-700 dark:text-gray-200"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={updatedUser.email}
-                onChange={handleInputChange}
-                className="mt-2 p-2 w-full border rounded-lg"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="name"
-                className="block text-gray-700 dark:text-gray-200"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={updatedUser.name}
-                onChange={handleInputChange}
-                className="mt-2 p-2 w-full border rounded-lg"
-              />
-            </div>
-            <div className="flex justify-between">
-              {/* Delete button */}
-              {/* <button
-                onClick={() => handleDelete(selectedUser.id)}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-              >
-                Delete
-              </button> */}
+            <input
+              type="email"
+              name="email"
+              value={updatedUser.email}
+              onChange={handleInputChange}
+              placeholder="Email"
+              className="mt-2 p-2 w-full border rounded-lg"
+            />
+            <input
+              type="text"
+              name="name"
+              value={updatedUser.name}
+              onChange={handleInputChange}
+              placeholder="Name"
+              className="mt-2 p-2 w-full border rounded-lg"
+            />
+            <div className="flex justify-between mt-4">
               <button
                 onClick={handleUpdateUser}
                 className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
               >
                 Update
               </button>
-            </div>
-            <div className="flex justify-end mt-4">
               <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
