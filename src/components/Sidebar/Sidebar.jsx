@@ -150,18 +150,6 @@ function Sidebar() {
           <User size={20} className="mr-3" />
           <span>Akun Saya</span>
         </Link>
-
-        {/* Keluar */}
-        <Link
-          to="/"
-          className={cn(
-            "flex items-center p-3 rounded-md",
-            "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-          )}
-        >
-          <LogOut size={20} className="mr-3" />
-          <span>Keluar</span>
-        </Link>
       </nav>
     </aside>
   );

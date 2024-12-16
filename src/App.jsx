@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import Sidebar from "@/components/Sidebar/Sidebar";
-import Navbar from "@/components/Navbar/Navbar"; // Assuming Navbar is the component name
+import NavbarAdmin from "@/components/Navbar/Navbar_Admin";
 import HomePage from "./pages/User/HomePage";
 import AboutPage from "./pages/User/AboutPage";
 import Activities from "./pages/User/Activitiespage";
@@ -16,14 +16,15 @@ import Management from "./pages/Admin/ManagementPage";
 import ProdukSampah from "./pages/Admin/ProdukSampahPage";
 import Transaksi from "./pages/Admin/TransaksiPage";
 import UOMPage from "./pages/Admin/UOMPage";
-import NavbarAdmin from "@/components/Navbar/Navbar_Admin";
 import PenggunaPage from "./pages/Admin/PenggunaPage";
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(null); // Initialize as `null` for pending state
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Fetch user session on mount
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -36,17 +37,22 @@ const App = () => {
         if (response.data.Status === "Success") {
           setIsAuthenticated(true);
           setUser(response.data.User);
+
+          // Redirect to the dashboard if on login page or root
+          if (location.pathname === "/login" || location.pathname === "/") {
+            navigate("/web");
+          }
         } else {
-          navigate("/login");
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        navigate("/login");
+        setIsAuthenticated(false);
       }
     };
 
     fetchUserData();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const handleLogout = async () => {
     const confirmLogout = window.confirm("Are you sure you want to log out?");
@@ -59,63 +65,70 @@ const App = () => {
         );
         setIsAuthenticated(false);
         setUser(null);
-        navigate("/login");
+        navigate("/");
       } catch (error) {
         console.error("Error logging out:", error);
       }
     }
   };
 
+  if (isAuthenticated === null) {
+    // Show a loading indicator while authentication status is being determined
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
-      {/* User Section */}
-      <div className="user">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/AboutUs" element={<AboutPage />} />
-          <Route path="/activities" element={<Activities />} />
-          <Route path="/education" element={<Education />} />
-          <Route path="/Guide" element={<Guide />} />
-          <Route path="/partners" element={<PartnersPage />} />
-        </Routes>
-      </div>
+      <Routes>
+        {/* User Section */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/AboutUs" element={<AboutPage />} />
+        <Route path="/activities" element={<Activities />} />
+        <Route path="/education" element={<Education />} />
+        <Route path="/Guide" element={<Guide />} />
+        <Route path="/partners" element={<PartnersPage />} />
 
-      {/* Admin Section */}
-      <div className="admin">
-        <Routes>
-          {/* No Sidebar for Login */}
-          <Route path="/login" element={<LoginPage />} />
-
-          {/* Admin Routes with Sidebar */}
-          <Route
-            path="/web/*"
-            element={
-              isAuthenticated ? (
-                <div style={{ display: "flex" }}>
-                  <Sidebar /> {/* Sidebar is rendered here */}
-                  <div style={{ flex: 1 }}>
-                    <NavbarAdmin user={user} handleLogout={handleLogout} />
-                    <Routes>
-                      {/* Admin Section Routes */}
-                      <Route path="" element={<Dashboard />} />
-                      <Route path="kategori-sampah" element={<Kategori />} />
-                      <Route path="management" element={<Management />} />
-                      <Route path="pengguna" element={<PenggunaPage />} />
-                      <Route path="produk-sampah" element={<ProdukSampah />} />
-                      <Route path="transaksi" element={<Transaksi />} />
-                      <Route path="uom" element={<UOMPage />} />
-                    </Routes>
-                  </div>
-                </div>
-              ) : (
-                <div>Loading...</div> // Optionally show loading state until auth is determined
-              )
-            }
-          />
-        </Routes>
-      </div>
+        {/* Admin Section */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/web/*"
+          element={
+            isAuthenticated ? (
+              <AdminLayout user={user} handleLogout={handleLogout} />
+            ) : (
+              <Unauthorized />
+            )
+          }
+        />
+      </Routes>
     </>
   );
+};
+
+// Admin Layout Component
+const AdminLayout = ({ user, handleLogout }) => {
+  return (
+    <div style={{ display: "flex" }}>
+      <Sidebar />
+      <div style={{ flex: 1 }}>
+        <NavbarAdmin user={user} handleLogout={handleLogout} />
+        <Routes>
+          <Route path="" element={<Dashboard />} />
+          <Route path="kategori-sampah" element={<Kategori />} />
+          <Route path="management" element={<Management />} />
+          <Route path="pengguna" element={<PenggunaPage />} />
+          <Route path="produk-sampah" element={<ProdukSampah />} />
+          <Route path="transaksi" element={<Transaksi />} />
+          <Route path="uom" element={<UOMPage />} />
+        </Routes>
+      </div>
+    </div>
+  );
+};
+
+// Unauthorized Component
+const Unauthorized = () => {
+  return <div>You are not authorized to view this page. Please log in.</div>;
 };
 
 export default App;
