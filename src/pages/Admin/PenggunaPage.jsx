@@ -43,6 +43,7 @@ const PenggunaPage = () => {
       email: user.email,
       name: user.name,
       total_points: user.total_points,
+      active: user.active,
     });
     setIsEditModalOpen(true);
   };
@@ -131,7 +132,13 @@ const PenggunaPage = () => {
       );
       setUsers([...users, response.data]); // Add the new user to the state
       setIsAddModalOpen(false); // Close the modal
-      setNewUser({ email: "", password: "", name: "", total_points: 0 }); // Reset the form
+      setNewUser({
+        email: "",
+        password: "",
+        name: "",
+        total_points: 0,
+        active: true,
+      }); // Reset the form
     } catch (err) {
       setError("Failed to add the user.");
     }
@@ -146,7 +153,7 @@ const PenggunaPage = () => {
         <div className="2header flex align-center justify-around pt-3">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-center">
             <div className="mr-4">
-              <i className="uil uil-shop text-purple-600 text-4xl"></i>
+              <i className="uil uil-shop text-purple-600 text-2xl"></i>
             </div>
             <div>
               <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200">
@@ -154,6 +161,32 @@ const PenggunaPage = () => {
               </h4>
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {users.length}
+              </p>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-center">
+            <div className="mr-4">
+              <i className="uil uil-shop text-purple-600 text-2xl"></i>
+            </div>
+            <div>
+              <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200">
+                Active Users
+              </h4>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {users.filter((user) => user.active).length}
+              </p>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-center">
+            <div className="mr-4">
+              <i className="uil uil-shop text-purple-600 text-2xl"></i>
+            </div>
+            <div>
+              <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200">
+                Inactive Users
+              </h4>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {users.filter((user) => user.active === 0).length}
               </p>
             </div>
           </div>
@@ -261,6 +294,17 @@ const PenggunaPage = () => {
               placeholder="Total Points"
               className="mt-2 p-2 w-full border rounded-lg"
             />
+            <select
+              name="active"
+              value={updatedUser.active}
+              onChange={handleInputChange}
+              className="mt-2 p-2 w-full border rounded-lg"
+            >
+              <option value="">Select Active Status</option>
+              <option value={1}>Yes</option>
+              <option value={0}>No</option>
+            </select>
+
             <div className="flex justify-between mt-4">
               <button
                 onClick={handleUpdateUser}

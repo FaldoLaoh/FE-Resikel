@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Button } from "@/components/ui/button";
 
 const KategoriSampahPage = () => {
   const [categories, setCategories] = useState([]);
@@ -7,6 +8,7 @@ const KategoriSampahPage = () => {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch categories from API
   useEffect(() => {
@@ -47,6 +49,7 @@ const KategoriSampahPage = () => {
       setName("");
       setError("");
       fetchCategories();
+      setIsModalOpen(false); // Close modal after submission
     } catch (err) {
       console.error(err);
       setError("Failed to save category.");
@@ -57,6 +60,7 @@ const KategoriSampahPage = () => {
   const handleEdit = (category) => {
     setName(category.name);
     setEditingId(category.id);
+    setIsModalOpen(true);
   };
 
   // Handle delete button
@@ -72,92 +76,127 @@ const KategoriSampahPage = () => {
     }
   };
 
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+    setEditingId(null);
+    setName("");
+  };
+
   return (
-    <div className="mainSection mt-16 ml-64 p-6 flex-1">
-      <h1 className="text-2xl font-bold mb-4">Kategori Sampah</h1>
-
-      {/* Error Message */}
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4 mb-4">
-        <div>
-          <label htmlFor="category-name" className="block font-semibold">
-            Nama Kategori:
-          </label>
-          <input
-            type="text"
-            id="category-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter category name"
-            className="mt-2 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
-          >
-            {editingId ? "Update" : "Add"}
-          </button>
-        </div>
-        {editingId && (
-          <div>
-            <button
-              type="button"
-              onClick={() => {
-                setEditingId(null);
-                setName("");
-              }}
-              className="w-full bg-gray-400 text-white py-2 rounded-lg hover:bg-gray-500 transition"
+    <>
+      <div className="mainSection mt-16 ml-64 p-6 flex-1">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+              Data Kategori Sampah
+            </h2>
+            <Button
+              onClick={toggleModal}
+              className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded-md shadow-md"
             >
-              Cancel
-            </button>
+              Tambah
+            </Button>
           </div>
-        )}
-      </form>
 
-      {/* Loading Indicator */}
-      {loading && <div className="text-center">Loading...</div>}
+          {loading ? (
+            <div className="text-center">Loading...</div>
+          ) : categories.length > 0 ? (
+            <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+              <table className="min-w-full table-auto">
+                <thead className="bg-blue-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                      No
+                    </th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                      Nama Kategori
+                    </th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((category, index) => (
+                    <tr key={category.id} className="border-b">
+                      <td className="px-4 py-2 text-sm text-gray-700">
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-700">
+                        {category.name}
+                      </td>
+                      <td className="px-4 py-2 text-sm">
+                        <Button
+                          onClick={() => handleEdit(category)}
+                          className="bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-md shadow-md"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(category.id)}
+                          className="bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded-md shadow-md ml-2"
+                        >
+                          Hapus
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div>No categories available.</div>
+          )}
+        </div>
+      </div>
 
-      {/* Categories Table */}
-      {!loading && categories.length > 0 ? (
-        <table className="min-w-full bg-white dark:bg-gray-700 border rounded-lg">
-          <thead>
-            <tr>
-              <th className="py-2 px-4 border-b">ID</th>
-              <th className="py-2 px-4 border-b">Nama Kategori</th>
-              <th className="py-2 px-4 border-b">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((category) => (
-              <tr key={category.id} className="text-center">
-                <td className="py-2 px-4 border-b">{category.id}</td>
-                <td className="py-2 px-4 border-b">{category.name}</td>
-                <td className="py-2 px-4 border-b">
-                  <button
-                    onClick={() => handleEdit(category)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg mr-2 hover:bg-blue-600 transition"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(category.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        !loading && <div>No categories available.</div>
+      {/* Modal */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              toggleModal();
+            }
+          }}
+        >
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-2xl font-bold mb-4">
+              {editingId ? "Edit Kategori Sampah" : "Tambah Kategori Sampah"}
+            </h2>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">
+                  Nama Kategori
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Masukkan nama kategori"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  onClick={toggleModal}
+                  className="bg-gray-400 text-white hover:bg-gray-500 px-4 py-2 rounded-md"
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded-md"
+                >
+                  {editingId ? "Update" : "Simpan"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
-    </div>
+    </>
   );
 };
 

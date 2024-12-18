@@ -1,6 +1,7 @@
 // NavbarAdmin.jsx
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ModeToggle } from "../AppearanceModes/mode-toggle";
 
 function NavbarAdmin({ user, handleLogout }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -47,6 +48,8 @@ function NavbarAdmin({ user, handleLogout }) {
           <span className="text-gray-700 dark:text-white">
             {user && user.nama ? user.nama : `guest`}
           </span>
+
+          <ModeToggle />
 
           {dropdownOpen && (
             <div className="profile-dropdown absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg">

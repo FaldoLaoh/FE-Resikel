@@ -1,13 +1,44 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-// import { Banner } from "@/components/partials/Banner";
+import { Link } from "react-router-dom"; // Import Link for navigation
 import Banner from "@/components/partials/Banner";
-
+import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
-import Navbar from "../../components/navbar/Navbar";
+
 const Activities = () => {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5001/api/post_post/kegiatan"
+      );
+      console.log("Full Response Object:", response);
+      console.log("Response Data:", response.data);
+
+      if (response.data && Array.isArray(response.data)) {
+        setPosts(response.data);
+      } else {
+        setError("Expected an array but got something else.");
+        console.log("Response data is not an array:", response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+      setError("An error occurred while fetching posts.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
   return (
     <>
       <Navbar />
@@ -30,129 +61,65 @@ const Activities = () => {
 
         {/* Card Section */}
         <div className="w-full max-w-screen-lg mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 px-4">
-          {/* Card 1 */}
-          <div
-            className=" dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
-            style={{
-              background: `#1a7f5d`,
-            }}
-          >
-            <img
-              src="/images/kegiatan/4.jpg"
-              alt="Gambar Card 1"
-              className="w-full h-64 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-white mb-2 text-left">
-                Seminar Pengelolaan Sampah
-              </h3>
-              <p className="text-white mb-4 text-left">
-                Menyelenggarakan sharing session bersama para ahli tentang
-                pentingnya pengelolaan sampah yang tepat.
-              </p>
-              <div className="flex justify-between items-center mt-2">
-                <a href="#" className="text-white text-sm hover:underline">
-                  Selengkapnya
-                </a>
-                <span className="text-white text-xs">
-                  Kamis, 18 November 2024
-                </span>
-              </div>
-            </div>
-          </div>
+          {loading && <p>Loading posts...</p>}
+          {error && <p>{error}</p>}
+          {!loading && !error && posts.length > 0 ? (
+            posts.slice(0, 4).map((post) => {
+              let imgSrc;
 
-          {/* Card 2 */}
-          <div
-            className="dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
-            style={{
-              background: `#1a7f5d`,
-            }}
-          >
-            <img
-              src="/images/kegiatan/5.png"
-              alt="Gambar Card 2"
-              className="w-full h-64 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-white mb-2 text-left">
-                Aksi Bersih Lingkungan
-              </h3>
-              <p className="text-white mb-4 text-left">
-                Bergabung dalam kegiatan bersih-bersih dalam menciptakan
-                lingkungan yang lebih sehat.
-              </p>
-              <div className="flex justify-between items-center mt-2">
-                <a href="#" className="text-white text-sm hover:underline">
-                  Selengkapnya
-                </a>
-                <span className="text-white text-xs">
-                  Kamis, 18 November 2024
-                </span>
-              </div>
-            </div>
-          </div>
+              // Debugging: Log the type of post.foto
+              console.log("post.foto type:", typeof post.foto);
+              console.log("post.foto:", post.foto);
 
-          {/* Card 3 */}
-          <div
-            className="dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
-            style={{
-              background: `#1a7f5d`,
-            }}
-          >
-            <img
-              src="/images/kegiatan/4.jpg"
-              alt="Gambar Card 3"
-              className="w-full h-64 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-white mb-2 text-left">
-                Seminar Pengelolaan Sampah
-              </h3>
-              <p className="text-white mb-4 text-left">
-                Menyelenggarakan sharing session bersama para ahli tentang
-                pentingnya pengelolaan sampah yang tepat.
-              </p>
-              <div className="flex justify-between items-center mt-2">
-                <a href="#" className="text-white text-sm hover:underline">
-                  Selengkapnya
-                </a>
-                <span className="text-white text-xs">
-                  Kamis, 18 November 2024
-                </span>
-              </div>
-            </div>
-          </div>
+              // Check if post.foto is a File or Blob object
+              if (post.foto instanceof File || post.foto instanceof Blob) {
+                imgSrc = URL.createObjectURL(post.foto);
+              } else {
+                // If it's a string (URL), use it directly
+                imgSrc = `/images/kegiatan/${post.foto}`;
+              }
 
-          {/* Card 4 */}
-          <div
-            className="dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
-            style={{
-              background: `#1a7f5d`,
-            }}
-          >
-            <img
-              src="/images/kegiatan/5.png"
-              alt="Gambar Card 4"
-              className="w-full h-64 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-white mb-2 text-left">
-                Aksi Bersih Lingkungan
-              </h3>
-              <p className="text-white mb-4 text-left">
-                Bergabung dalam kegiatan bersih-bersih dalam menciptakan
-                lingkungan yang lebih sehat.
-              </p>
-              <div className="flex justify-between items-center mt-2">
-                <a href="#" className="text-white text-sm hover:underline">
-                  Selengkapnya
-                </a>
-                <span className="text-white text-xs">
-                  Kamis, 18 November 2024
-                </span>
-              </div>
-            </div>
-          </div>
+              return (
+                <div
+                  key={post.id}
+                  className="dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
+                  style={{
+                    background: `#1a7f5d`,
+                  }}
+                >
+                  <Link to={`/activity/${post.id}`}>
+                    <img
+                      className="ml-28"
+                      src="/article-alt.jpeg"
+                      alt={`Gambar ${post.title}`}
+                    />
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold text-white mb-2 text-left">
+                        {post.title}
+                      </h3>
+                      <p className="text-white mb-4 text-left">
+                        {post.description.split(" ").slice(0, 10).join(" ")}
+                        {post.description.split(" ").length > 10 ? "..." : ""}
+                      </p>
+                      <div className="flex justify-between items-center mt-2">
+                        <a
+                          href="#"
+                          className="text-white text-sm hover:underline"
+                        >
+                          Selengkapnya
+                        </a>
+                        <span className="text-white text-xs">
+                          {new Date(post.created_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              );
+            })
+          ) : (
+            <p>No posts available.</p>
+          )}
         </div>
 
         {/* Kolom Daftar Sekarang dan Form */}

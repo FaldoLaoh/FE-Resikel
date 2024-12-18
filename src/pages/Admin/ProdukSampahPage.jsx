@@ -1,307 +1,233 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Sidebar from "@/components/Sidebar/Sidebar";
-import NavbarAdmin from "@/components/Navbar/Navbar_Admin";
-import { useNavigate } from "react-router-dom";
 
 const ProdukSampahPage = () => {
-  const [produkSampah, setProdukSampah] = useState([]);
-  const [newData, setNewData] = useState({
-    foto: "",
+  const [products, setProducts] = useState([]); // Ensure it's initialized as an array
+  const [categories, setCategories] = useState([]);
+  const [formData, setFormData] = useState({
+    id: "",
+    name: "",
     category_id: "",
-    uom_id: "",
+    list_price: "",
+    cost_price: "",
   });
-  const [categories, setCategories] = useState([]); // To store categories
-  const [uoms, setUoms] = useState([]); // To store UOMs
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [currentId, setCurrentId] = useState(null);
-  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [productsError, setProductsError] = useState(null);
+  const [categoriesError, setCategoriesError] = useState(null);
 
-  // Fetch Produk Sampah Data
+  // Fetch products and categories on page load
   useEffect(() => {
-    fetchProdukSampah();
-    fetchCategories(); // Fetch categories when the component mounts
-    fetchUoms(); // Fetch UOMs when the component mounts
+    const fetchData = async () => {
+      try {
+        // Fetch products and categories concurrently
+        const [productsResponse, categoriesResponse] = await Promise.all([
+          axios.get("http://localhost:5001/products"), // Replace with actual endpoint
+          axios.get("http://localhost:5001/categories"), // Replace with actual endpoint
+        ]);
+
+        // Validate products response
+        if (Array.isArray(productsResponse.data)) {
+          setProducts(productsResponse.data);
+        } else {
+          setProductsError("Products data is not in the expected format");
+        }
+
+        // Validate categories response
+        if (Array.isArray(categoriesResponse.data)) {
+          setCategories(categoriesResponse.data);
+        } else {
+          setCategoriesError("Categories data is not in the expected format");
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setProductsError("Failed to fetch products data");
+        setCategoriesError("Failed to fetch categories data");
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const fetchProdukSampah = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:5001/api/v1/produk-sampah",
-        {
-          withCredentials: true,
-        }
-      );
-      setProdukSampah(response.data.data); // Assuming the response has { data: [...] }
-    } catch (error) {
-      console.error("Error fetching produk sampah:", error);
-    }
-  };
+  // Fetch all products
+  // const fetchProducts = async () => {
+  //   try {
+  //     const response = await axios.get("/api/products");
+  //     setProducts(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching products", error);
+  //   }
+  // };
 
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:5001/api/v1/categories",
-        {
-          withCredentials: true,
-        }
-      );
-      setCategories(response.data.data); // Assuming the response has { data: [...] }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
+  // // Fetch all categories
+  // const fetchCategories = async () => {
+  //   try {
+  //     const response = await axios.get("/api/categories");
+  //     setCategories(response.data);
+  //   } catch (error) {
+  //     console.error("Error fetching categories", error);
+  //   }
+  // };
 
-  const fetchUoms = async () => {
-    try {
-      const response = await axios.get("http://localhost:5001/api/v1/uoms", {
-        withCredentials: true,
-      });
-      setUoms(response.data.data); // Assuming the response has { data: [...] }
-    } catch (error) {
-      console.error("Error fetching UOMs:", error);
-    }
-  };
-
+  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewData({
-      ...newData,
+    setFormData({
+      ...formData,
       [name]: value,
     });
   };
 
-  const handleCreateOrUpdate = async () => {
-    try {
-      if (isEditMode) {
-        // Update an existing product
-        await axios.put(
-          `http://localhost:5001/api/v1/produk-sampah/${currentId}`,
-          newData,
-          { withCredentials: true }
-        );
-      } else {
-        // Create a new product
-        await axios.post(
-          "http://localhost:5001/api/v1/produk-sampah",
-          newData,
-          {
-            withCredentials: true,
-          }
-        );
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isEditing) {
+      try {
+        await axios.put(`/api/products/${formData.id}`, formData);
+        setIsEditing(false);
+        fetchProducts();
+      } catch (error) {
+        console.error("Error updating product", error);
       }
-
-      setIsModalOpen(false);
-      resetForm();
-      fetchProdukSampah(); // Reload data
-    } catch (error) {
-      console.error("Error saving produk sampah:", error);
+    } else {
+      try {
+        await axios.post("/api/products", formData);
+        fetchProducts();
+      } catch (error) {
+        console.error("Error creating product", error);
+      }
     }
+    setFormData({
+      id: "",
+      name: "",
+      category_id: "",
+      list_price: "",
+      cost_price: "",
+    });
   };
 
+  // Handle editing a product
+  const handleEdit = (product) => {
+    setFormData({
+      id: product.id,
+      name: product.name,
+      category_id: product.category_id,
+      list_price: product.list_price,
+      cost_price: product.cost_price,
+    });
+    setIsEditing(true);
+  };
+
+  // Handle deleting a product
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5001/api/v1/produk-sampah/${id}`, {
-        withCredentials: true,
-      });
-      fetchProdukSampah(); // Reload data
+      await axios.delete(`/api/products/${id}`);
+      fetchProducts();
     } catch (error) {
-      console.error("Error deleting produk sampah:", error);
+      console.error("Error deleting product", error);
     }
   };
 
-  const handleEdit = (produk) => {
-    setNewData({
-      foto: produk.foto,
-      category_id: produk.category_id,
-      uom_id: produk.uom_id,
-    });
-    setCurrentId(produk._id); // Updated for `_id` in MongoDB
-    setIsEditMode(true);
-    setIsModalOpen(true);
-  };
+  return (
+    <div className="container mt-20 ml-64 mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Produk Sampah</h1>
 
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setNewData({
-      foto: "",
-      category_id: "",
-      uom_id: "",
-    });
-    setIsEditMode(false);
-    setCurrentId(null);
-  };
-
-  // Modal JSX
-  const modal = (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-      onClick={toggleModal}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 p-6 rounded-lg w-96"
-        onClick={(e) => e.stopPropagation()}
+      {/* Form for Adding/Editing Product */}
+      <form
+        onSubmit={handleSubmit}
+        className="mb-6 p-4 border rounded-md shadow-sm"
       >
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-          {isEditMode ? "Edit Produk Sampah" : "Tambah Produk Sampah"}
+        <h2 className="text-xl font-semibold mb-4">
+          {isEditing ? "Edit Product" : "Add New Product"}
         </h2>
-
-        <div className="mb-4">
-          <label
-            htmlFor="foto"
-            className="block text-gray-700 dark:text-gray-200"
-          >
-            Foto URL
-          </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input
             type="text"
-            id="foto"
-            name="foto"
-            value={newData.foto}
+            name="name"
+            value={formData.name}
             onChange={handleInputChange}
-            className="mt-2 p-2 w-full border rounded-lg"
+            placeholder="Product Name"
+            className="p-2 border rounded"
+            required
           />
-        </div>
-
-        {/* Dropdown for category_id */}
-        <div className="mb-4">
-          <label
-            htmlFor="category_id"
-            className="block text-gray-700 dark:text-gray-200"
-          >
-            Kategori
-          </label>
           <select
-            id="category_id"
             name="category_id"
-            value={newData.category_id}
+            value={formData.category_id}
             onChange={handleInputChange}
-            className="mt-2 p-2 w-full border rounded-lg"
+            className="p-2 border rounded"
+            required
           >
-            <option value="">Pilih Kategori</option>
+            <option value="">Select Category</option>
             {categories.map((category) => (
-              <option key={category._id} value={category._id}>
+              <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
           </select>
-        </div>
-
-        {/* Dropdown for uom_id */}
-        <div className="mb-4">
-          <label
-            htmlFor="uom_id"
-            className="block text-gray-700 dark:text-gray-200"
-          >
-            Satuan
-          </label>
-          <select
-            id="uom_id"
-            name="uom_id"
-            value={newData.uom_id}
+          <input
+            type="number"
+            name="list_price"
+            value={formData.list_price}
             onChange={handleInputChange}
-            className="mt-2 p-2 w-full border rounded-lg"
-          >
-            <option value="">Pilih Satuan</option>
-            {uoms.map((uom) => (
-              <option key={uom._id} value={uom._id}>
-                {uom.name}
-              </option>
-            ))}
-          </select>
+            placeholder="List Price"
+            className="p-2 border rounded"
+            required
+          />
+          <input
+            type="number"
+            name="cost_price"
+            value={formData.cost_price}
+            onChange={handleInputChange}
+            placeholder="Cost Price"
+            className="p-2 border rounded"
+            required
+          />
         </div>
+        <button
+          type="submit"
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          {isEditing ? "Update Product" : "Add Product"}
+        </button>
+      </form>
 
-        <div className="flex justify-end">
-          <button
-            onClick={handleCreateOrUpdate}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-          >
-            {isEditMode ? "Update" : "Simpan"}
-          </button>
-          <button
-            onClick={toggleModal}
-            className="ml-2 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-          >
-            Batal
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-800">
-      <Sidebar />
-      <div className="flex-1 overflow-y-auto ml-64">
-        <NavbarAdmin />
-        <div className="mt-16 p-6">
-          <header className="bg-white dark:bg-gray-900 shadow p-4 flex justify-between">
-            <h1 className="text-2xl font-bold">Produk Sampah</h1>
-            <button
-              onClick={toggleModal}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-            >
-              Tambah Produk Sampah
-            </button>
-          </header>
-
-          <table className="w-full mt-6 table-auto bg-white dark:bg-gray-700 rounded-lg">
-            <thead>
-              <tr>
-                {["No", "Foto", "Nama", "Kategori", "Satuan", "Aksi"].map(
-                  (header, index) => (
-                    <th key={index} className="px-4 py-2">
-                      {header}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {produkSampah.map((produk, index) => (
-                <tr key={produk._id}>
-                  <td className="px-4 py-2">{index + 1}</td>
-                  <td className="px-4 py-2">
-                    <img
-                      src={produk.foto}
-                      alt={produk.name}
-                      className="w-20 h-20 object-cover rounded-md"
-                    />
-                  </td>
-                  <td className="px-4 py-2">{produk.name}</td>
-                  <td className="px-4 py-2">
-                    {produk.category ? produk.category.name : "N/A"}
-                  </td>
-                  <td className="px-4 py-2">
-                    {produk.uom ? produk.uom.name : "N/A"}
-                  </td>
-                  <td className="px-4 py-2">
-                    <button
-                      onClick={() => handleEdit(produk)}
-                      className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(produk._id)}
-                      className="ml-2 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                    >
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {isModalOpen && modal}
-      </div>
+      {/* Product Table */}
+      <table className="min-w-full border-collapse table-auto">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="p-2 border">ID</th>
+            <th className="p-2 border">Product Name</th>
+            <th className="p-2 border">Category</th>
+            <th className="p-2 border">List Price</th>
+            <th className="p-2 border">Cost Price</th>
+            <th className="p-2 border">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((product) => (
+            <tr key={product.id} className="odd:bg-gray-50">
+              <td className="p-2 border">{product.id}</td>
+              <td className="p-2 border">{product.name}</td>
+              <td className="p-2 border">{product.category_name}</td>
+              <td className="p-2 border">{product.list_price}</td>
+              <td className="p-2 border">{product.cost_price}</td>
+              <td className="p-2 border">
+                <button
+                  onClick={() => handleEdit(product)}
+                  className="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(product.id)}
+                  className="bg-red-500 text-white px-3 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

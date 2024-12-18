@@ -29,6 +29,12 @@ function Sidebar() {
     setIsDropdownOpen((prev) => !prev);
   };
 
+  const [isDropdownOpen1, setIsDropdownOpen1] = useState(false);
+
+  const toggleDropdown1 = () => {
+    setIsDropdownOpen1((prev) => !prev);
+  };
+
   return (
     <aside className="fixed top-0 left-0 h-full w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       <nav className="flex flex-col space-y-1 mt-16">
@@ -125,17 +131,55 @@ function Sidebar() {
         </Link>
 
         {/* Postingan */}
-        <Link
-          to="/web/posting"
-          className={cn(
-            "flex items-center p-3 rounded-md",
-            "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-          )}
-        >
-          <Edit size={20} className="mr-3" />
-          <span>Postingan</span>
-        </Link>
 
+        <div className="flex flex-col">
+          <button
+            onClick={toggleDropdown1}
+            className={cn(
+              "flex items-center p-3 rounded-md",
+              "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+            )}
+          >
+            <div className="flex items-center">
+              <Clipboard size={20} className="mr-3" />
+              <span>Postingan</span>
+            </div>
+            <ChevronDown
+              size={20}
+              className={cn("transition-transform", {
+                "rotate-180": isDropdownOpen1,
+              })}
+            />
+          </button>
+          {isDropdownOpen1 && (
+            <div className="ml-8 flex flex-col space-y-1">
+              <Link
+                to="/web/postingan/kegiatan"
+                className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              >
+                <span>Kegiatan</span>
+              </Link>
+              <Link
+                to="/web/postingan/artikel"
+                className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              >
+                <span>Artikel</span>
+              </Link>
+              <Link
+                to="/web/postingan/jenis-sampah"
+                className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              >
+                <span>Jenis Sampah</span>
+              </Link>
+              <Link
+                to="/web/postingan/manfaat-daur-ulang"
+                className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              >
+                <span>Manfaat Daur Ulang</span>
+              </Link>
+            </div>
+          )}
+        </div>
         {/* Divider */}
         <div className="border-t border-gray-300 dark:border-gray-700 my-2"></div>
 
@@ -151,6 +195,8 @@ function Sidebar() {
           <span>Akun Saya</span>
         </Link>
       </nav>
+
+      {/* Postingan */}
     </aside>
   );
 }

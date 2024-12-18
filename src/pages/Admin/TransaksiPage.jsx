@@ -16,7 +16,7 @@ const Transaksi = () => {
   return (
     <>
       {/* <Navbar /> */}
-      <div>
+      <div className="mt-20 ml-64">
         <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-4 mb-3 items-start">
           {/* Card 1 - Total Saldo Poin */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-center">

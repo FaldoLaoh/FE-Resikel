@@ -17,6 +17,9 @@ import ProdukSampah from "./pages/Admin/ProdukSampahPage";
 import Transaksi from "./pages/Admin/TransaksiPage";
 import UOMPage from "./pages/Admin/UOMPage";
 import PenggunaPage from "./pages/Admin/PenggunaPage";
+import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
+import KegiatanPage from "./pages/Admin/KegiatanPage";
+import ActivityDetail from "./pages/User/ActivityDetail";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // Initialize as `null` for pending state
@@ -39,7 +42,7 @@ const App = () => {
           setUser(response.data.User);
 
           // Redirect to the dashboard if on login page or root
-          if (location.pathname === "/login" || location.pathname === "/") {
+          if (location.pathname === "/" || location.pathname === "/") {
             navigate("/web");
           }
         } else {
@@ -78,30 +81,33 @@ const App = () => {
   }
 
   return (
-    <>
-      <Routes>
-        {/* User Section */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/AboutUs" element={<AboutPage />} />
-        <Route path="/activities" element={<Activities />} />
-        <Route path="/education" element={<Education />} />
-        <Route path="/Guide" element={<Guide />} />
-        <Route path="/partners" element={<PartnersPage />} />
+    <Routes>
+      {/* User Section */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/AboutUs" element={<AboutPage />} />
+      <Route path="/activities" element={<Activities />} />
+      <Route path="/activity/:id" element={<ActivityDetail />} />
+      <Route path="/education" element={<Education />} />
+      <Route path="/Guide" element={<Guide />} />
+      <Route path="/partners" element={<PartnersPage />} />
 
-        {/* Admin Section */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/web/*"
-          element={
-            isAuthenticated ? (
+      {/* Admin Section */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/web/*"
+        element={
+          isAuthenticated ? (
+            <ErrorBoundary>
+              {" "}
+              {/* Wrap AdminLayout in ErrorBoundary */}
               <AdminLayout user={user} handleLogout={handleLogout} />
-            ) : (
-              <Unauthorized />
-            )
-          }
-        />
-      </Routes>
-    </>
+            </ErrorBoundary>
+          ) : (
+            <Unauthorized />
+          )
+        }
+      />
+    </Routes>
   );
 };
 
@@ -120,6 +126,7 @@ const AdminLayout = ({ user, handleLogout }) => {
           <Route path="produk-sampah" element={<ProdukSampah />} />
           <Route path="transaksi" element={<Transaksi />} />
           <Route path="uom" element={<UOMPage />} />
+          <Route path="postingan/kegiatan" element={<KegiatanPage />} />
         </Routes>
       </div>
     </div>
