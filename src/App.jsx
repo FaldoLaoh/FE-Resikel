@@ -14,6 +14,7 @@ import Dashboard from "./pages/Admin/DashboardPage";
 import Kategori from "./pages/Admin/KategoriSampahPage";
 import Management from "./pages/Admin/ManagementPage";
 import ProdukSampah from "./pages/Admin/ProdukSampahPage";
+import PetaPage from "./pages/Admin/Peta";
 import Transaksi from "./pages/Admin/TransaksiPage";
 import UOMPage from "./pages/Admin/UOMPage";
 import PenggunaPage from "./pages/Admin/PenggunaPage";
@@ -127,6 +128,7 @@ const AdminLayout = ({ user, handleLogout }) => {
           <Route path="kategori-sampah" element={<Kategori />} />
           <Route path="management" element={<Management />} />
           <Route path="pengguna" element={<PenggunaPage />} />
+          <Route path="peta" element={<PetaPage />} />
           <Route path="produk-sampah" element={<ProdukSampah />} />
           <Route path="transaksi" element={<Transaksi />} />
           <Route path="uom" element={<UOMPage />} />
