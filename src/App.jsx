@@ -20,6 +20,8 @@ import PenggunaPage from "./pages/Admin/PenggunaPage";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import KegiatanPage from "./pages/Admin/KegiatanPage";
 import ActivityDetail from "./pages/User/ActivityDetail";
+import ArtikelPage from "./pages/Admin/ArtikelPage";
+import ArtikelDetail from "./pages/User/ArtikelDetail";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // Initialize as `null` for pending state
@@ -88,6 +90,8 @@ const App = () => {
       <Route path="/activities" element={<Activities />} />
       <Route path="/activity/:id" element={<ActivityDetail />} />
       <Route path="/education" element={<Education />} />
+      <Route path="/education/artikel/:id" element={<ArtikelDetail />} />
+
       <Route path="/Guide" element={<Guide />} />
       <Route path="/partners" element={<PartnersPage />} />
 
@@ -127,6 +131,7 @@ const AdminLayout = ({ user, handleLogout }) => {
           <Route path="transaksi" element={<Transaksi />} />
           <Route path="uom" element={<UOMPage />} />
           <Route path="postingan/kegiatan" element={<KegiatanPage />} />
+          <Route path="postingan/artikel" element={<ArtikelPage />} />
         </Routes>
       </div>
     </div>

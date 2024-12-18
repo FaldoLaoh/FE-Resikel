@@ -1,265 +1,83 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom"; // Import Link for navigation
 import Footer from "@/components/Footer/Footer";
 import Navbar from "@/components/Navbar/Navbar";
 
 const Education = () => {
+  const [artikels, setArtikels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("artikel");
+
+  useEffect(() => {
+    const fetchArtikels = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          "http://localhost:5001/api/post_post/artikel"
+        ); // Replace with your actual endpoint
+        if (!response.ok) {
+          throw new Error("Failed to fetch artikels.");
+        }
+        const data = await response.json();
+        // Check if posts exist and are an array
+        setArtikels(Array.isArray(data.posts) ? data.posts : []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArtikels();
+  }, []);
 
   const renderTabContent = () => {
     const contentClass = "transition-opacity duration-300 ease-in-out";
 
     switch (activeTab) {
       case "artikel":
+        if (loading) return <p>Loading...</p>;
+        if (error) return <p>Error: {error}</p>;
+
         return (
           <div
             className={`${contentClass} opacity-100 grid grid-cols-1 gap-10`}
           >
-            {/* Artikel 1 */}
-            <div className="flex flex-col sm:flex-row bg-white shadow-lg border p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl">
-              <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
-                <img
-                  src="/images/edukasi/1.png"
-                  alt="Artikel Image 1"
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "16/9" }}
-                />
+            {artikels.map((artikel, index) => (
+              <div
+                key={index}
+                className="flex flex-col sm:flex-row bg-white shadow-lg border p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl"
+              >
+                <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
+                  <img
+                    src={artikel.imageUrl} // Replace with the actual property for the image URL
+                    alt={artikel.title}
+                    className="w-full h-full object-cover"
+                    style={{ aspectRatio: "16/9" }}
+                  />
+                </div>
+                <div className="flex flex-col text-left">
+                  <h2 className="font-bold text-lg">{artikel.title}</h2>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {artikel.date}{" "}
+                    {/* Replace with the actual property for the date */}
+                  </p>
+                  <p className="text-gray-700 mb-2">{artikel.description}</p>
+                  <Link
+                    to={`/education/artikel/${artikel.id}`} // Navigate to article detail page
+                    className="text-green-700 font-semibold mt-4"
+                  >
+                    Selengkapnya &gt;&gt;
+                  </Link>
+                </div>
               </div>
-              <div className="flex flex-col text-left">
-                <h2 className="font-bold text-lg">Kreasi Botol Plastik</h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  Senin, 21 Oktober 2024
-                </p>
-                <p className="text-gray-700 mb-2">
-                  Mengubah limbah botol plastik menjadi wadah multifungsi yang
-                  dapat digunakan kembali. Temukan ide kreatif untuk memberikan
-                  nilai tambah pada sampah plastik.
-                </p>
-                <a href="#" className="text-green-700 font-semibold mt-4">
-                  Selengkapnya &gt;&gt;
-                </a>
-              </div>
-            </div>
-
-            {/* Artikel 2 */}
-            <div className="flex flex-col sm:flex-row bg-white shadow-lg border p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl">
-              <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
-                <img
-                  src="/images/edukasi/2.png"
-                  alt="Artikel Image 2"
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "16/9" }}
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <h2 className="font-bold text-lg">Bank Sampah Kreatif</h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  Senin, 21 Oktober 2024
-                </p>
-                <p className="text-gray-700 mb-2">
-                  Mengenal sistem pengelolaan sampah terpadu melalui bank sampah
-                  dan bagaimana cara mengoptimalkan nilai ekonomi dari barang
-                  bekas.
-                </p>
-                <a href="#" className="text-green-700 font-semibold mt-4">
-                  Selengkapnya &gt;&gt;
-                </a>
-              </div>
-            </div>
-
-            {/* Artikel 3 */}
-            <div className="flex flex-col sm:flex-row bg-white shadow-lg border p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl">
-              <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
-                <img
-                  src="/images/edukasi/3.png"
-                  alt="Artikel Image 3"
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "16/9" }}
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <h2 className="font-bold text-lg">DIY Pot Tanaman Lucu</h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  Senin, 21 Oktober 2024
-                </p>
-                <p className="text-gray-700 mb-2">
-                  Panduan membuat pot tanaman unik dan menggemaskan dari sampah
-                  plastik. Jadikan sampahmu sebagai media tanam yang menarik dan
-                  ramah lingkungan.
-                </p>
-                <a href="#" className="text-green-700 font-semibold mt-4">
-                  Selengkapnya &gt;&gt;
-                </a>
-              </div>
-            </div>
+            ))}
           </div>
         );
       case "jenis sampah":
-        return (
-          <div className={`${contentClass} opacity-100 grid grid-cols-1 gap-6`}>
-            {/* Artikel 1 */}
-            <div className="flex flex-col sm:flex-row bg-white shadow-lg p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl">
-              <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
-                <img
-                  src="/images/edukasi/1.png"
-                  alt="Artikel Image 1"
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "16/9" }}
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <h2 className="font-bold text-lg">Artikel Jenis Sampah</h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  Senin, 21 Oktober 2024
-                </p>
-                <p className="text-gray-700 mb-2">
-                  Mengubah limbah botol plastik menjadi wadah multifungsi yang
-                  dapat digunakan kembali. Temukan ide kreatif untuk memberikan
-                  nilai tambah pada sampah plastik.
-                </p>
-                <a href="#" className="text-green-700 font-semibold mt-4">
-                  Selengkapnya &gt;&gt;
-                </a>
-              </div>
-            </div>
-
-            {/* Artikel 2 */}
-            <div className="flex flex-col sm:flex-row bg-white shadow-lg p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl">
-              <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
-                <img
-                  src="/images/edukasi/2.png"
-                  alt="Artikel Image 2"
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "16/9" }}
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <h2 className="font-bold text-lg">Bank Sampah Kreatif</h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  Senin, 21 Oktober 2024
-                </p>
-                <p className="text-gray-700 mb-2">
-                  Mengenal sistem pengelolaan sampah terpadu melalui bank sampah
-                  dan bagaimana cara mengoptimalkan nilai ekonomi dari barang
-                  bekas.
-                </p>
-                <a href="#" className="text-green-700 font-semibold mt-4">
-                  Selengkapnya &gt;&gt;
-                </a>
-              </div>
-            </div>
-
-            {/* Artikel 3 */}
-            <div className="flex flex-col sm:flex-row bg-white shadow-lg p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl">
-              <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
-                <img
-                  src="/images/edukasi/3.png"
-                  alt="Artikel Image 3"
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "16/9" }}
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <h2 className="font-bold text-lg">DIY Pot Tanaman Lucu</h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  Senin, 21 Oktober 2024
-                </p>
-                <p className="text-gray-700 mb-2">
-                  Panduan membuat pot tanaman unik dan menggemaskan dari sampah
-                  plastik. Jadikan sampahmu sebagai media tanam yang menarik dan
-                  ramah lingkungan.
-                </p>
-                <a href="#" className="text-green-700 font-semibold mt-4">
-                  Selengkapnya &gt;&gt;
-                </a>
-              </div>
-            </div>
-          </div>
-        );
       case "manfaat daur ulang":
-        return (
-          <div className={`${contentClass} opacity-100 grid grid-cols-1 gap-6`}>
-            {/* Artikel 1 */}
-            <div className="flex flex-col sm:flex-row bg-white shadow-lg p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl">
-              <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
-                <img
-                  src="/images/edukasi/1.png"
-                  alt="Artikel Image 1"
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "16/9" }}
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <h2 className="font-bold text-lg">
-                  Artikel Manfaat Daur Ulang
-                </h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  Senin, 21 Oktober 2024
-                </p>
-                <p className="text-gray-700 mb-2">
-                  Mengubah limbah botol plastik menjadi wadah multifungsi yang
-                  dapat digunakan kembali. Temukan ide kreatif untuk memberikan
-                  nilai tambah pada sampah plastik.
-                </p>
-                <a href="#" className="text-green-700 font-semibold mt-4">
-                  Selengkapnya &gt;&gt;
-                </a>
-              </div>
-            </div>
-
-            {/* Artikel 2 */}
-            <div className="flex flex-col sm:flex-row bg-white shadow-lg p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl">
-              <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
-                <img
-                  src="/images/edukasi/2.png"
-                  alt="Artikel Image 2"
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "16/9" }}
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <h2 className="font-bold text-lg">Bank Sampah Kreatif</h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  Senin, 21 Oktober 2024
-                </p>
-                <p className="text-gray-700 mb-2">
-                  Mengenal sistem pengelolaan sampah terpadu melalui bank sampah
-                  dan bagaimana cara mengoptimalkan nilai ekonomi dari barang
-                  bekas.
-                </p>
-                <a href="#" className="text-green-700 font-semibold mt-4">
-                  Selengkapnya &gt;&gt;
-                </a>
-              </div>
-            </div>
-
-            {/* Artikel 3 */}
-            <div className="flex flex-col sm:flex-row bg-white shadow-lg p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl">
-              <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
-                <img
-                  src="/images/edukasi/3.png"
-                  alt="Artikel Image 3"
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "16/9" }}
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <h2 className="font-bold text-lg">DIY Pot Tanaman Lucu</h2>
-                <p className="text-sm text-gray-500 mb-2">
-                  Senin, 21 Oktober 2024
-                </p>
-                <p className="text-gray-700 mb-2">
-                  Panduan membuat pot tanaman unik dan menggemaskan dari sampah
-                  plastik. Jadikan sampahmu sebagai media tanam yang menarik dan
-                  ramah lingkungan.
-                </p>
-                <a href="#" className="text-green-700 font-semibold mt-4">
-                  Selengkapnya &gt;&gt;
-                </a>
-              </div>
-            </div>
-          </div>
-        );
-      // Cases for "jenis sampah" and "manfaat daur ulang" can be updated similarly if needed
+        return <p>Other tabs to be implemented...</p>;
       default:
         return null;
     }
@@ -267,9 +85,7 @@ const Education = () => {
 
   return (
     <>
-      {/* Navbar */}
       <Navbar />
-      {/* Banner */}
       <div
         className="h-[600px] w-full bg-cover bg-left mt-16 relative"
         style={{
@@ -288,7 +104,6 @@ const Education = () => {
             </p>
           </div>
 
-          {/* Search bar */}
           <div className="flex items-center max-w-3xl bg-white rounded-full overflow-hidden shadow-md mx-auto">
             <input
               type="text"
@@ -301,20 +116,17 @@ const Education = () => {
           </div>
         </div>
       </div>
-
-      {/* Tabs Navigation */}
       <div className="mt-20 mb-32 container lg:px-32">
-        {/* Tab Headers */}
         <div className="flex border-b-2 gap-x-8 border-green-700">
           {["Artikel", "Jenis Sampah", "Manfaat Daur Ulang"].map(
             (tab, index) => (
               <button
                 key={index}
                 onClick={() => setActiveTab(tab.toLowerCase())}
-                className={`font-nunito text-lg font-bold px-4 py-2 rounded-t-xl transition-all duration-300 ${
+                className={`font-nunito text-lg ${
                   activeTab === tab.toLowerCase()
-                    ? "border-b-2 border-green-700 bg-[#31A05C] text-white"
-                    : "text-gray-600 hover:bg-green-50"
+                    ? "text-green-700 font-semibold"
+                    : "text-gray-500"
                 }`}
               >
                 {tab}
@@ -322,11 +134,7 @@ const Education = () => {
             )
           )}
         </div>
-
-        {/* Tabs Content */}
-        <div className=" bg-white rounded-b-lg shadow-md mt-16">
-          {renderTabContent()}
-        </div>
+        <div className="mt-8">{renderTabContent()}</div>
       </div>
       <Footer />
     </>
