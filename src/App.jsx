@@ -22,6 +22,8 @@ import KegiatanPage from "./pages/Admin/KegiatanPage";
 import ActivityDetail from "./pages/User/ActivityDetail";
 import ArtikelPage from "./pages/Admin/ArtikelPage";
 import ArtikelDetail from "./pages/User/ArtikelDetail";
+import JenisSampahPage from "./pages/Admin/JenisSampahPage";
+import ManfaatPage from "./pages/Admin/ManfaatPage";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // Initialize as `null` for pending state
@@ -132,6 +134,11 @@ const AdminLayout = ({ user, handleLogout }) => {
           <Route path="uom" element={<UOMPage />} />
           <Route path="postingan/kegiatan" element={<KegiatanPage />} />
           <Route path="postingan/artikel" element={<ArtikelPage />} />
+          <Route path="postingan/jenis-sampah" element={<JenisSampahPage />} />
+          <Route
+            path="postingan/manfaat-daur-ulang"
+            element={<ManfaatPage />}
+          />
         </Routes>
       </div>
     </div>
@@ -140,6 +147,15 @@ const AdminLayout = ({ user, handleLogout }) => {
 
 // Unauthorized Component
 const Unauthorized = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Show the message, then redirect after 3 seconds
+    setTimeout(() => {
+      navigate("/");
+    }, 3000); // Redirect after 3 seconds (3000 milliseconds)
+  }, [navigate]);
+
   return <div>You are not authorized to view this page. Please log in.</div>;
 };
 

@@ -1,27 +1,55 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; // Import Link for navigation
+import { Link } from "react-router-dom";
 import Footer from "@/components/Footer/Footer";
 import Navbar from "@/components/Navbar/Navbar";
 
 const Education = () => {
   const [artikels, setArtikels] = useState([]);
+  const [jenisSampah, setJenisSampah] = useState([]);
+  const [manfaatDaurUlang, setManfaatDaurUlang] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("artikel");
 
+  const truncateDescription = (text, wordLimit = 15) => {
+    const words = text.split(" ");
+    if (words.length <= wordLimit) {
+      return text;
+    }
+    return words.slice(0, wordLimit).join(" ") + "...";
+  };
+
   useEffect(() => {
-    const fetchArtikels = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "http://localhost:5001/api/post_post/artikel"
-        ); // Replace with your actual endpoint
+        const endpoint =
+          activeTab === "artikel"
+            ? "http://localhost:5001/api/post_post/artikel"
+            : activeTab === "jenis sampah"
+            ? "http://localhost:5001/api/jenis_sampah"
+            : activeTab === "manfaat daur ulang"
+            ? "http://localhost:5001/api/post_post/manfaat?category_id=4"
+            : null;
+
+        if (!endpoint) return;
+
+        const response = await fetch(endpoint);
         if (!response.ok) {
-          throw new Error("Failed to fetch artikels.");
+          throw new Error("Failed to fetch data.");
         }
+
         const data = await response.json();
-        // Check if posts exist and are an array
-        setArtikels(Array.isArray(data.posts) ? data.posts : []);
+        console.log(data); // Check what is returned
+
+        // Update state based on the active tab
+        if (activeTab === "artikel") {
+          setArtikels(Array.isArray(data.posts) ? data.posts : []);
+        } else if (activeTab === "jenis sampah") {
+          setJenisSampah(Array.isArray(data.posts) ? data.posts : []);
+        } else if (activeTab === "manfaat daur ulang") {
+          setManfaatDaurUlang(Array.isArray(data.posts) ? data.posts : []);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -29,8 +57,8 @@ const Education = () => {
       }
     };
 
-    fetchArtikels();
-  }, []);
+    fetchData();
+  }, [activeTab]);
 
   const renderTabContent = () => {
     const contentClass = "transition-opacity duration-300 ease-in-out";
@@ -51,7 +79,7 @@ const Education = () => {
               >
                 <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
                   <img
-                    src={artikel.imageUrl} // Replace with the actual property for the image URL
+                    src={artikel.imageUrl}
                     alt={artikel.title}
                     className="w-full h-full object-cover"
                     style={{ aspectRatio: "16/9" }}
@@ -59,13 +87,12 @@ const Education = () => {
                 </div>
                 <div className="flex flex-col text-left">
                   <h2 className="font-bold text-lg">{artikel.title}</h2>
-                  <p className="text-sm text-gray-500 mb-2">
-                    {artikel.date}{" "}
-                    {/* Replace with the actual property for the date */}
+                  <p className="text-sm text-gray-500 mb-2">{artikel.date}</p>
+                  <p className="text-gray-700 mb-2">
+                    {truncateDescription(artikel.description, 15)}
                   </p>
-                  <p className="text-gray-700 mb-2">{artikel.description}</p>
                   <Link
-                    to={`/education/artikel/${artikel.id}`} // Navigate to article detail page
+                    to={`/education/artikel/${artikel.id}`}
                     className="text-green-700 font-semibold mt-4"
                   >
                     Selengkapnya &gt;&gt;
@@ -76,8 +103,88 @@ const Education = () => {
           </div>
         );
       case "jenis sampah":
+        if (loading) return <p>Loading...</p>;
+        if (error) return <p>Error: {error}</p>;
+
+        return (
+          <div
+            className={`${contentClass} opacity-100 grid grid-cols-1 gap-10`}
+          >
+            {jenisSampah.map((item, index) => (
+              <div
+                key={index}
+                className="flex flex-col sm:flex-row bg-white shadow-lg border p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl"
+              >
+                <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                    style={{ aspectRatio: "16/9" }}
+                  />
+                </div>
+                <div className="flex flex-col text-left">
+                  <h2 className="font-bold text-lg">{item.title}</h2>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {item.created_date}
+                  </p>
+                  <p className="text-gray-700 mb-2">
+                    {truncateDescription(item.description, 15)}
+                  </p>
+                  <Link
+                    to={`/education/jenis-sampah/${item.id}`}
+                    className="text-green-700 font-semibold mt-4"
+                  >
+                    Selengkapnya &gt;&gt;
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
       case "manfaat daur ulang":
-        return <p>Other tabs to be implemented...</p>;
+        if (loading) return <p>Loading...</p>;
+        if (error) return <p>Error: {error}</p>;
+
+        console.log(manfaatDaurUlang); // Debug output to see the structure of data
+
+        return (
+          <div
+            className={`${contentClass} opacity-100 grid grid-cols-1 gap-10`}
+          >
+            {manfaatDaurUlang.map((manfaat, index) => (
+              <div
+                key={index}
+                className="flex flex-col sm:flex-row bg-white shadow-lg border p-4 rounded-lg items-start transform transition duration-300 hover:shadow-xl"
+              >
+                <div className="w-full sm:w-80 h-50 overflow-hidden rounded-md mb-4 sm:mb-0 sm:mr-4 flex-shrink-0">
+                  <img
+                    src={`http://localhost:5001/uploads/${manfaat.foto}`}
+                    alt={manfaat.title}
+                    className="w-full h-full object-cover"
+                    style={{ aspectRatio: "16/9" }}
+                  />
+                </div>
+                <div className="flex flex-col text-left">
+                  <h2 className="font-bold text-lg">{manfaat.title}</h2>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {new Date(manfaat.created_date).toLocaleDateString()}
+                  </p>
+                  <p className="text-gray-700 mb-2">
+                    {truncateDescription(manfaat.description, 15)}
+                  </p>
+                  <Link
+                    to={`/education/manfaat/${manfaat.id}`}
+                    className="text-green-700 font-semibold mt-4"
+                  >
+                    Selengkapnya &gt;&gt;
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
       default:
         return null;
     }
@@ -134,7 +241,7 @@ const Education = () => {
             )
           )}
         </div>
-        <div className="mt-8">{renderTabContent()}</div>
+        <div>{renderTabContent()}</div>
       </div>
       <Footer />
     </>
