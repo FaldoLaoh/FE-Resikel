@@ -104,13 +104,10 @@ const PetaPage = () => {
   return (
     <>
       {/* <Navbar /> */}
-      <div>
+      <div className="mt-20 ml-64">
         <div className="w-full mx-auto px-4 mt-13">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 col-span-6">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                Peta Laporan TPS Illegal
-              </h2>
               <div className="flex items-center border border-gray-300 rounded-lg">
                 <input
                   type="text"
